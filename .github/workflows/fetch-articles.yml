@@ -14,12 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch RSS feeds and write articles.json
+      - name: Fetch RSS feeds and merge with existing articles.json
         run: |
           python3 << 'PYEOF'
           import urllib.request
           import xml.etree.ElementTree as ET
           import json
+          import os
+          from datetime import datetime, timezone, timedelta
+
+          KEEP_DAYS = 14  # rolling 2-week window
 
           FEEDS = [
             {"source": "Wall Street Journal", "id": "wsj", "feeds": [
@@ -44,9 +48,8 @@ jobs:
             with urllib.request.urlopen(req, timeout=15) as r:
               content = r.read()
             root = ET.fromstring(content)
-            items = root.findall(".//item")
             articles = []
-            for item in items:
+            for item in root.findall(".//item"):
               title = item.findtext("title", "").strip()
               link = item.findtext("link", "").strip()
               pub_date = item.findtext("pubDate", "").strip()
@@ -54,23 +57,58 @@ jobs:
                 articles.append({"title": title, "url": link, "date": pub_date})
             return articles
 
+          def parse_date(date_str):
+            if not date_str:
+              return None
+            for fmt in ["%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S GMT"]:
+              try:
+                return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+              except:
+                pass
+            return None
+
+          # Load existing data
+          existing = {}
+          if os.path.exists("articles.json"):
+            with open("articles.json") as f:
+              existing = json.load(f)
+
+          cutoff = datetime.now(timezone.utc) - timedelta(days=KEEP_DAYS)
           output = {}
+
           for source in FEEDS:
-            all_articles = []
+            sid = source["id"]
+            # Start with existing articles, indexed by URL
+            seen = {a["url"]: a for a in existing.get(sid, {}).get("articles", [])}
+
+            # Fetch new articles and merge
             for feed in source["feeds"]:
               try:
-                articles = fetch_feed(feed["url"])
-                all_articles.extend(articles)
-                print(f"  {source['id']} / {feed['label']}: {len(articles)} articles")
+                new_articles = fetch_feed(feed["url"])
+                for a in new_articles:
+                  seen[a["url"]] = a  # overwrite with fresh data if duplicate
+                print(f"  {sid} / {feed['label']}: {len(new_articles)} fetched")
               except Exception as e:
-                print(f"  FAILED {source['id']} / {feed['label']}: {e}")
-            output[source["id"]] = {"name": source["source"], "articles": all_articles}
+                print(f"  FAILED {sid} / {feed['label']}: {e}")
+
+            # Filter to 2-week window, drop undated articles older than cutoff
+            all_articles = []
+            for a in seen.values():
+              d = parse_date(a.get("date", ""))
+              if d is None or d >= cutoff:
+                all_articles.append(a)
+
+            # Sort newest first
+            all_articles.sort(key=lambda a: parse_date(a.get("date","")) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+
+            output[sid] = {"name": source["source"], "articles": all_articles}
+            print(f"  {sid} total after merge: {len(all_articles)}")
 
           with open("articles.json", "w") as f:
             json.dump(output, f)
 
           total = sum(len(v["articles"]) for v in output.values())
-          print(f"Done. {total} total articles written.")
+          print(f"Done. {total} total articles in archive.")
           PYEOF
 
       - name: Commit articles.json
