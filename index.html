@@ -47,10 +47,7 @@
       letter-spacing: -0.01em;
     }
 
-    header span {
-      font-size: 13px;
-      color: var(--muted);
-    }
+    header span { font-size: 13px; color: var(--muted); }
 
     .main {
       max-width: 720px;
@@ -145,7 +142,6 @@
     .btn-shuffle:hover { background: #eeece7; }
     .btn-shuffle:active { transform: scale(0.99); }
     .btn-shuffle:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .btn-shuffle svg { transition: transform 0.5s ease; }
     .btn-shuffle.spinning svg { transform: rotate(360deg); }
 
@@ -190,10 +186,7 @@
       overflow: hidden;
     }
 
-    .result-date {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .result-date { font-size: 12px; color: var(--muted); }
 
     .btn-open {
       padding: 7px 14px;
@@ -225,18 +218,6 @@
       border-radius: var(--radius-lg);
     }
 
-    .loading-dots::after {
-      content: '';
-      animation: dots 1.2s steps(4, end) infinite;
-    }
-
-    @keyframes dots {
-      0%   { content: ''; }
-      25%  { content: '.'; }
-      50%  { content: '..'; }
-      75%  { content: '...'; }
-    }
-
     .divider {
       border: none;
       border-top: 0.5px solid var(--border);
@@ -260,7 +241,6 @@
 <main class="main">
 
   <p class="section-label">News</p>
-
   <div class="sources-grid" id="sources"></div>
 
   <div class="shuffle-row">
@@ -285,59 +265,20 @@
 </main>
 
 <script>
-const PROXY = 'https://api.allorigins.win/get?url=';
-
 const SOURCES = [
-  {
-    id: "wsj",
-    name: "Wall Street Journal",
-    desc: "Markets, business, finance",
-    feeds: [
-      { label: "Markets",     url: "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines" },
-      { label: "Opinion",     url: "https://feeds.content.dowjones.io/public/rss/RSSOpinion" },
-      { label: "World News",  url: "https://feeds.content.dowjones.io/public/rss/RSSWorldNews" },
-      { label: "Business",    url: "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness" },
-      { label: "Tech",        url: "https://feeds.content.dowjones.io/public/rss/RSSWSJD" },
-      { label: "Lifestyle",   url: "https://feeds.content.dowjones.io/public/rss/RSSLifestyle" },
-    ]
-  },
-  {
-    id: "bloomberg",
-    name: "Bloomberg",
-    desc: "Finance, global markets, politics",
-    feeds: [
-      { label: "Markets",    url: "https://feeds.bloomberg.com/markets/news.rss" },
-      { label: "Technology", url: "https://feeds.bloomberg.com/technology/news.rss" },
-      { label: "Politics",   url: "https://feeds.bloomberg.com/politics/news.rss" },
-      { label: "Business",   url: "https://feeds.bloomberg.com/business/news.rss" },
-      { label: "Wealth",     url: "https://feeds.bloomberg.com/wealth/news.rss" },
-    ]
-  },
-  {
-    id: "economist",
-    name: "The Economist",
-    desc: "Global affairs, long-form analysis",
-    feeds: [
-      { label: "Leaders",             url: "https://www.economist.com/feeds/print-sections/69/leaders.xml" },
-      { label: "Briefing",            url: "https://www.economist.com/feeds/print-sections/102/briefings2.xml" },
-      { label: "United States",       url: "https://www.economist.com/feeds/print-sections/71/united-states.xml" },
-      { label: "Business",            url: "https://www.economist.com/feeds/print-sections/77/business.xml" },
-      { label: "Finance & Economics", url: "https://www.economist.com/feeds/print-sections/79/finance-and-economics.xml" },
-      { label: "Science & Tech",      url: "https://www.economist.com/feeds/print-sections/80/science-and-technology.xml" },
-      { label: "Books & Arts",        url: "https://www.economist.com/feeds/print-sections/89/books-and-arts.xml" },
-    ]
-  }
+  { id: "wsj",       name: "Wall Street Journal", desc: "Markets, business, finance" },
+  { id: "bloomberg", name: "Bloomberg",            desc: "Finance, global markets, politics" },
+  { id: "economist", name: "The Economist",        desc: "Global affairs, long-form analysis" },
 ];
 
 let selected = new Set(["wsj", "bloomberg", "economist"]);
+let articlesData = null;
 
 function renderSources() {
   document.getElementById("sources").innerHTML = SOURCES.map(s => `
     <div class="source-card ${selected.has(s.id) ? 'selected' : ''}"
          onclick="toggle('${s.id}')"
-         role="checkbox"
-         aria-checked="${selected.has(s.id)}"
-         tabindex="0"
+         role="checkbox" aria-checked="${selected.has(s.id)}" tabindex="0"
          onkeydown="if(event.key==='Enter'||event.key===' ')toggle('${s.id}')">
       <div class="check">${selected.has(s.id) ? '✓' : ''}</div>
       <p class="name">${s.name}</p>
@@ -351,17 +292,8 @@ function toggle(id) {
   renderSources();
 }
 
-async function fetchFeed(feedUrl) {
-  const res = await fetch(PROXY + encodeURIComponent(feedUrl));
-  const json = await res.json();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(json.contents, "text/xml");
-  const items = Array.from(doc.querySelectorAll("item"));
-  return items.map(item => ({
-    title: item.querySelector("title")?.textContent?.trim() || "",
-    url:   item.querySelector("link")?.textContent?.trim() || "",
-    date:  item.querySelector("pubDate")?.textContent?.trim() || "",
-  })).filter(i => i.title && i.url);
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function formatDate(str) {
@@ -371,8 +303,11 @@ function formatDate(str) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+async function loadArticles() {
+  if (articlesData) return articlesData;
+  const res = await fetch("articles.json?t=" + Date.now());
+  articlesData = await res.json();
+  return articlesData;
 }
 
 async function shuffle() {
@@ -387,64 +322,56 @@ async function shuffle() {
   btn.disabled = true;
   btn.classList.add("spinning");
   document.getElementById("results").innerHTML =
-    '<div class="state-box"><span class="loading-dots">Fetching articles</span></div>';
+    '<div class="state-box">Picking articles\u2026</div>';
 
-  // Pick 3 source+feed combos (unique sources where possible)
-  const picks = [];
-  const usedSources = new Set();
-  const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+  try {
+    const data = await loadArticles();
 
-  for (const src of shuffledPool) {
-    if (picks.length >= 3) break;
-    picks.push({ src, feed: pickRandom(src.feeds) });
-    usedSources.add(src.id);
+    const picks = [];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    for (const src of shuffled) {
+      if (picks.length >= 3) break;
+      const articles = data[src.id]?.articles || [];
+      if (articles.length) picks.push({ src, article: pickRandom(articles) });
+    }
+    // fill to 3 if fewer sources selected
+    while (picks.length < 3) {
+      const src = pickRandom(pool);
+      const articles = data[src.id]?.articles || [];
+      if (articles.length) picks.push({ src, article: pickRandom(articles) });
+      else break;
+    }
+
+    if (!picks.length) {
+      document.getElementById("results").innerHTML =
+        '<div class="state-box">No articles found. The feed refresh may still be running.</div>';
+      return;
+    }
+
+    document.getElementById("results").innerHTML = picks.map(({ src, article }) => `
+      <div class="result-card">
+        <div class="result-info">
+          <p class="result-source">${src.name}</p>
+          <p class="result-title">${article.title}</p>
+          ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
+        </div>
+        <a class="btn-open" href="${article.url}" target="_blank" rel="noopener">
+          Open
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+      </div>
+    `).join("");
+  } catch (e) {
+    document.getElementById("results").innerHTML =
+      '<div class="state-box">Couldn\'t load articles. Try again shortly.</div>';
   }
-  // Fill up to 3 if fewer than 3 sources selected
-  while (picks.length < 3) {
-    const src = pickRandom(pool);
-    picks.push({ src, feed: pickRandom(src.feeds) });
-  }
-
-  // Fetch all feeds in parallel
-  const results = await Promise.allSettled(
-    picks.map(async ({ src, feed }) => {
-      const articles = await fetchFeed(feed.url);
-      if (!articles.length) throw new Error("No articles");
-      const article = pickRandom(articles);
-      return { src, feed, article };
-    })
-  );
 
   btn.disabled = false;
   setTimeout(() => btn.classList.remove("spinning"), 500);
-
-  const successes = results
-    .filter(r => r.status === "fulfilled")
-    .map(r => r.value);
-
-  if (!successes.length) {
-    document.getElementById("results").innerHTML =
-      '<div class="state-box">Couldn\'t fetch articles right now. Try again.</div>';
-    return;
-  }
-
-  document.getElementById("results").innerHTML = successes.map(({ src, article }) => `
-    <div class="result-card">
-      <div class="result-info">
-        <p class="result-source">${src.name}</p>
-        <p class="result-title">${article.title}</p>
-        ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
-      </div>
-      <a class="btn-open" href="${article.url}" target="_blank" rel="noopener">
-        Open
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-      </a>
-    </div>
-  `).join("");
 }
 
 renderSources();
