@@ -37,50 +37,21 @@ jobs:
               {"label": "Business", "url": "https://feeds.bloomberg.com/business/news.rss"},
               {"label": "Wealth", "url": "https://feeds.bloomberg.com/wealth/news.rss"},
             ]},
-            {"source": "The Economist", "id": "economist", "feeds": [
-              {"label": "Leaders", "url": "https://www.economist.com/feeds/print-sections/69/leaders.xml"},
-              {"label": "Briefing", "url": "https://www.economist.com/feeds/print-sections/102/briefings2.xml"},
-              {"label": "United States", "url": "https://www.economist.com/feeds/print-sections/71/united-states.xml"},
-              {"label": "Business", "url": "https://www.economist.com/feeds/print-sections/77/business.xml"},
-              {"label": "Finance & Economics", "url": "https://www.economist.com/feeds/print-sections/79/finance-and-economics.xml"},
-              {"label": "Science & Tech", "url": "https://www.economist.com/feeds/print-sections/80/science-and-technology.xml"},
-              {"label": "Books & Arts", "url": "https://www.economist.com/feeds/print-sections/89/books-and-arts.xml"},
-            ]},
           ]
 
-          ATOM = "http://www.w3.org/2005/Atom"
-
           def fetch_feed(url):
-            req = urllib.request.Request(url, headers={
-              "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)",
-              "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml"
-            })
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as r:
               content = r.read()
-            print(f"    raw bytes: {len(content)}, preview: {content[:200]}")
             root = ET.fromstring(content)
-            articles = []
-
-            # Try RSS <item> format
             items = root.findall(".//item")
+            articles = []
             for item in items:
               title = item.findtext("title", "").strip()
               link = item.findtext("link", "").strip()
               pub_date = item.findtext("pubDate", "").strip()
               if title and link:
                 articles.append({"title": title, "url": link, "date": pub_date})
-
-            # Try Atom <entry> format
-            if not articles:
-              entries = root.findall(f".//{{{ATOM}}}entry")
-              for entry in entries:
-                title = entry.findtext(f"{{{ATOM}}}title", "").strip()
-                link_el = entry.find(f"{{{ATOM}}}link")
-                link = (link_el.get("href") if link_el is not None else "").strip()
-                pub_date = entry.findtext(f"{{{ATOM}}}published", "").strip()
-                if title and link:
-                  articles.append({"title": title, "url": link, "date": pub_date})
-
             return articles
 
           output = {}
