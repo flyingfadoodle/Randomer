@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.2);
+      --text: #1a1a18;
+      --muted: #6b6b67;
+      --accent: #1a1a18;
+      --accent-bg: #1a1a18;
+      --accent-fg: #f7f5f0;
+      --info-bg: #eef4ff;
+      --info-border: rgba(24,95,165,0.3);
+      --info-text: #185fa5;
+      --radius-md: 8px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    header {
+      border-bottom: 0.5px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      background: var(--bg);
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    header span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    /* Source cards */
+    .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    .source-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0.875rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+      user-select: none;
+    }
+
+    .source-card:hover { border-color: var(--border-strong); }
+
+    .source-card.selected {
+      border: 1.5px solid var(--info-border);
+      background: var(--info-bg);
+    }
+
+    .source-card .check {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 0.5px solid var(--border-strong);
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      color: var(--info-text);
+      transition: all 0.15s;
+    }
+
+    .source-card.selected .check {
+      background: var(--info-bg);
+      border-color: var(--info-border);
+    }
+
+    .source-card .name {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 3px;
+      padding-right: 24px;
+    }
+
+    .source-card .desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* Shuffle button */
+    .shuffle-row {
+      margin-bottom: 2rem;
+    }
+
+    .btn-shuffle {
+      width: 100%;
+      padding: 11px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+
+    .btn-shuffle:hover { background: #eeece7; }
+    .btn-shuffle:active { transform: scale(0.99); }
+
+    .btn-shuffle svg {
+      transition: transform 0.4s ease;
+    }
+
+    .btn-shuffle.spinning svg {
+      transform: rotate(360deg);
+    }
+
+    /* Results */
+    .results { display: flex; flex-direction: column; gap: 10px; }
+
+    .result-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      animation: fadein 0.18s ease;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-info { flex: 1; min-width: 0; }
+
+    .result-source {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .result-section {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result-url {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-open {
+      padding: 7px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-strong);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-open:hover { background: #eeece7; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 14px;
+      border: 0.5px dashed var(--border-strong);
+      border-radius: var(--radius-lg);
+    }
+
+    .divider {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    @media (max-width: 520px) {
+      .sources-grid { grid-template-columns: 1fr; }
+      header { padding: 1rem; }
+      .main { padding: 1.5rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Reading Hub</h1>
+  <span>Find something worth reading</span>
+</header>
+
+<main class="main">
+
+  <p class="section-label">News</p>
+
+  <div class="sources-grid" id="sources"></div>
+
+  <div class="shuffle-row">
+    <button class="btn-shuffle" id="shuffleBtn" onclick="shuffle()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 3 21 3 21 8"></polyline>
+        <line x1="4" y1="20" x2="21" y2="3"></line>
+        <polyline points="21 16 21 21 16 21"></polyline>
+        <line x1="15" y1="15" x2="21" y2="21"></line>
+      </svg>
+      Shuffle picks
+    </button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="empty-state">Select sources above and hit shuffle</div>
+  </div>
+
+  <hr class="divider" />
+
+  <p class="section-label" style="color: var(--border-strong);">More categories coming soon</p>
+
+</main>
+
+<script>
+  const SOURCES = [
+    {
+      id: "wsj",
+      name: "Wall Street Journal",
+      desc: "Markets, business, finance",
+      sections: [
+        { label: "Markets",     url: "https://www.wsj.com/news/markets" },
+        { label: "Economy",     url: "https://www.wsj.com/news/economy" },
+        { label: "Business",    url: "https://www.wsj.com/news/business" },
+        { label: "Tech",        url: "https://www.wsj.com/news/tech" },
+        { label: "Politics",    url: "https://www.wsj.com/news/politics" },
+        { label: "World",       url: "https://www.wsj.com/news/world" },
+        { label: "Opinion",     url: "https://www.wsj.com/news/opinion" },
+        { label: "Real Estate", url: "https://www.wsj.com/news/real-estate" },
+      ]
+    },
+    {
+      id: "bloomberg",
+      name: "Bloomberg",
+      desc: "Finance, global markets, politics",
+      sections: [
+        { label: "Markets",    url: "https://www.bloomberg.com/markets" },
+        { label: "Technology", url: "https://www.bloomberg.com/technology" },
+        { label: "Economics",  url: "https://www.bloomberg.com/economics" },
+        { label: "Politics",   url: "https://www.bloomberg.com/politics" },
+        { label: "Wealth",     url: "https://www.bloomberg.com/wealth" },
+        { label: "Green",      url: "https://www.bloomberg.com/green" },
+        { label: "Pursuits",   url: "https://www.bloomberg.com/pursuits" },
+        { label: "CityLab",    url: "https://www.bloomberg.com/citylab" },
+      ]
+    },
+    {
+      id: "economist",
+      name: "The Economist",
+      desc: "Global affairs, long-form analysis",
+      sections: [
+        { label: "Finance & Economics",  url: "https://www.economist.com/finance-and-economics" },
+        { label: "Business",             url: "https://www.economist.com/business" },
+        { label: "Leaders",              url: "https://www.economist.com/leaders" },
+        { label: "United States",        url: "https://www.economist.com/united-states" },
+        { label: "The World This Week",  url: "https://www.economist.com/the-world-this-week" },
+        { label: "Science & Technology", url: "https://www.economist.com/science-and-technology" },
+        { label: "Culture",              url: "https://www.economist.com/culture" },
+        { label: "Briefing",             url: "https://www.economist.com/briefing" },
+      ]
+    }
+  ];
+
+  let selected = new Set(["wsj", "bloomberg", "economist"]);
+
+  function renderSources() {
+    document.getElementById("sources").innerHTML = SOURCES.map(s => `
+      <div class="source-card ${selected.has(s.id) ? 'selected' : ''}"
+           onclick="toggle('${s.id}')"
+           role="checkbox"
+           aria-checked="${selected.has(s.id)}"
+           tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')toggle('${s.id}')">
+        <div class="check">${selected.has(s.id) ? '✓' : ''}</div>
+        <p class="name">${s.name}</p>
+        <p class="desc">${s.desc}</p>
+      </div>
+    `).join("");
+  }
+
+  function toggle(id) {
+    selected.has(id) ? selected.delete(id) : selected.add(id);
+    renderSources();
+  }
+
+  function shuffle() {
+    const btn = document.getElementById("shuffleBtn");
+    btn.classList.add("spinning");
+    setTimeout(() => btn.classList.remove("spinning"), 400);
+
+    const pool = SOURCES.filter(s => selected.has(s.id));
+    if (!pool.length) {
+      document.getElementById("results").innerHTML =
+        '<div class="empty-state">Select at least one source first.</div>';
+      return;
+    }
+
+    const picks = [];
+    const used = new Set();
+    let attempts = 0;
+    while (picks.length < 3 && attempts < 200) {
+      attempts++;
+      const src = pool[Math.floor(Math.random() * pool.length)];
+      const sec = src.sections[Math.floor(Math.random() * src.sections.length)];
+      const key = src.id + sec.label;
+      if (!used.has(key)) { used.add(key); picks.push({ src, sec }); }
+    }
+
+    document.getElementById("results").innerHTML = picks.map(({ src, sec }) => `
+      <div class="result-card">
+        <div class="result-info">
+          <p class="result-source">${src.name}</p>
+          <p class="result-section">${sec.label}</p>
+          <p class="result-url">${sec.url}</p>
+        </div>
+        <a class="btn-open" href="${sec.url}" target="_blank" rel="noopener">
+          Open
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+      </div>
+    `).join("");
+  }
+
+  renderSources();
+</script>
+
+</body>
+</html>
