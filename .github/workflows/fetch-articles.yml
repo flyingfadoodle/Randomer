@@ -1,0 +1,93 @@
+name: Fetch Articles
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # every hour
+  workflow_dispatch:       # allow manual trigger
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch RSS feeds and write articles.json
+        run: |
+          python3 << 'EOF'
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          import json
+          import random
+
+          FEEDS = [
+            {"source": "Wall Street Journal", "id": "wsj", "feeds": [
+              {"label": "Business", "url": "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness"},
+              {"label": "World News", "url": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews"},
+              {"label": "Opinion", "url": "https://feeds.content.dowjones.io/public/rss/RSSOpinion"},
+              {"label": "Tech", "url": "https://feeds.content.dowjones.io/public/rss/RSSWSJD"},
+              {"label": "Markets", "url": "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines"},
+              {"label": "Lifestyle", "url": "https://feeds.content.dowjones.io/public/rss/RSSLifestyle"},
+            ]},
+            {"source": "Bloomberg", "id": "bloomberg", "feeds": [
+              {"label": "Markets", "url": "https://feeds.bloomberg.com/markets/news.rss"},
+              {"label": "Technology", "url": "https://feeds.bloomberg.com/technology/news.rss"},
+              {"label": "Politics", "url": "https://feeds.bloomberg.com/politics/news.rss"},
+              {"label": "Business", "url": "https://feeds.bloomberg.com/business/news.rss"},
+              {"label": "Wealth", "url": "https://feeds.bloomberg.com/wealth/news.rss"},
+            ]},
+            {"source": "The Economist", "id": "economist", "feeds": [
+              {"label": "Leaders", "url": "https://www.economist.com/feeds/print-sections/69/leaders.xml"},
+              {"label": "Briefing", "url": "https://www.economist.com/feeds/print-sections/102/briefings2.xml"},
+              {"label": "United States", "url": "https://www.economist.com/feeds/print-sections/71/united-states.xml"},
+              {"label": "Business", "url": "https://www.economist.com/feeds/print-sections/77/business.xml"},
+              {"label": "Finance & Economics", "url": "https://www.economist.com/feeds/print-sections/79/finance-and-economics.xml"},
+              {"label": "Science & Tech", "url": "https://www.economist.com/feeds/print-sections/80/science-and-technology.xml"},
+              {"label": "Books & Arts", "url": "https://www.economist.com/feeds/print-sections/89/books-and-arts.xml"},
+            ]},
+          ]
+
+          def fetch_feed(url):
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+              content = r.read()
+            root = ET.fromstring(content)
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
+            items = root.findall(".//item")
+            articles = []
+            for item in items:
+              title = item.findtext("title", "").strip()
+              link = item.findtext("link", "").strip()
+              pub_date = item.findtext("pubDate", "").strip()
+              if title and link:
+                articles.append({"title": title, "url": link, "date": pub_date})
+            return articles
+
+          output = {}
+          for source in FEEDS:
+            all_articles = []
+            for feed in source["feeds"]:
+              try:
+                articles = fetch_feed(feed["url"])
+                all_articles.extend(articles)
+                print(f"  {source['id']} / {feed['label']}: {len(articles)} articles")
+              except Exception as e:
+                print(f"  FAILED {source['id']} / {feed['label']}: {e}")
+            output[source["id"]] = {
+              "name": source["source"],
+              "articles": all_articles
+            }
+
+          with open("articles.json", "w") as f:
+            json.dump(output, f)
+
+          total = sum(len(v["articles"]) for v in output.values())
+          print(f"Done. {total} total articles written to articles.json")
+          EOF
+
+      - name: Commit articles.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add articles.json
+          git diff --cached --quiet || git commit -m "chore: refresh articles"
+          git push
