@@ -2,8 +2,11 @@ name: Fetch Articles
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every hour
-  workflow_dispatch:       # allow manual trigger
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   fetch:
@@ -13,11 +16,10 @@ jobs:
 
       - name: Fetch RSS feeds and write articles.json
         run: |
-          python3 << 'EOF'
+          python3 << 'PYEOF'
           import urllib.request
           import xml.etree.ElementTree as ET
           import json
-          import random
 
           FEEDS = [
             {"source": "Wall Street Journal", "id": "wsj", "feeds": [
@@ -51,7 +53,6 @@ jobs:
             with urllib.request.urlopen(req, timeout=10) as r:
               content = r.read()
             root = ET.fromstring(content)
-            ns = {"atom": "http://www.w3.org/2005/Atom"}
             items = root.findall(".//item")
             articles = []
             for item in items:
@@ -72,17 +73,14 @@ jobs:
                 print(f"  {source['id']} / {feed['label']}: {len(articles)} articles")
               except Exception as e:
                 print(f"  FAILED {source['id']} / {feed['label']}: {e}")
-            output[source["id"]] = {
-              "name": source["source"],
-              "articles": all_articles
-            }
+            output[source["id"]] = {"name": source["source"], "articles": all_articles}
 
           with open("articles.json", "w") as f:
             json.dump(output, f)
 
           total = sum(len(v["articles"]) for v in output.values())
-          print(f"Done. {total} total articles written to articles.json")
-          EOF
+          print(f"Done. {total} total articles written.")
+          PYEOF
 
       - name: Commit articles.json
         run: |
