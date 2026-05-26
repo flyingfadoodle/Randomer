@@ -131,11 +131,11 @@ async function shuffle() {
     const picks = [];
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     for (const src of shuffled) {
-      if (picks.length >= 3) break;
+      if (picks.length >= 5) break;
       const articles = data[src.id]?.articles || [];
       if (articles.length) picks.push({ src, article: pickRandom(articles) });
     }
-    while (picks.length < 3) {
+    while (picks.length < 5) {
       const src = pickRandom(pool);
       const articles = data[src.id]?.articles || [];
       if (articles.length) picks.push({ src, article: pickRandom(articles) });
