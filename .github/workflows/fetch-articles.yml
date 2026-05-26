@@ -23,7 +23,7 @@ jobs:
           import os
           from datetime import datetime, timezone, timedelta
 
-          KEEP_DAYS = 14  # rolling 2-week window
+          KEEP_DAYS = 21  # rolling 2-week window
 
           FEEDS = [
             {"source": "Wall Street Journal", "id": "wsj", "feeds": [
