@@ -17,9 +17,6 @@
       --border-strong: rgba(0,0,0,0.2);
       --text: #1a1a18;
       --muted: #6b6b67;
-      --accent: #1a1a18;
-      --accent-bg: #1a1a18;
-      --accent-fg: #f7f5f0;
       --info-bg: #eef4ff;
       --info-border: rgba(24,95,165,0.3);
       --info-text: #185fa5;
@@ -32,7 +29,6 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 0;
     }
 
     header {
@@ -71,7 +67,6 @@
       margin-bottom: 0.75rem;
     }
 
-    /* Source cards */
     .sources-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -107,7 +102,6 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 10px;
       color: var(--info-text);
-      transition: all 0.15s;
     }
 
     .source-card.selected .check {
@@ -128,10 +122,7 @@
       line-height: 1.4;
     }
 
-    /* Shuffle button */
-    .shuffle-row {
-      margin-bottom: 2rem;
-    }
+    .shuffle-row { margin-bottom: 2rem; }
 
     .btn-shuffle {
       width: 100%;
@@ -153,16 +144,11 @@
 
     .btn-shuffle:hover { background: #eeece7; }
     .btn-shuffle:active { transform: scale(0.99); }
+    .btn-shuffle:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .btn-shuffle svg {
-      transition: transform 0.4s ease;
-    }
+    .btn-shuffle svg { transition: transform 0.5s ease; }
+    .btn-shuffle.spinning svg { transform: rotate(360deg); }
 
-    .btn-shuffle.spinning svg {
-      transform: rotate(360deg);
-    }
-
-    /* Results */
     .results { display: flex; flex-direction: column; gap: 10px; }
 
     .result-card {
@@ -193,21 +179,20 @@
       margin-bottom: 3px;
     }
 
-    .result-section {
-      font-size: 15px;
+    .result-title {
+      font-size: 14px;
       font-weight: 500;
       margin-bottom: 3px;
-      white-space: nowrap;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    .result-url {
+    .result-date {
       font-size: 12px;
       color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .btn-open {
@@ -231,13 +216,25 @@
 
     .btn-open:hover { background: #eeece7; }
 
-    .empty-state {
+    .state-box {
       text-align: center;
-      padding: 3rem 1rem;
+      padding: 2.5rem 1rem;
       color: var(--muted);
       font-size: 14px;
       border: 0.5px dashed var(--border-strong);
       border-radius: var(--radius-lg);
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
     }
 
     .divider {
@@ -268,7 +265,7 @@
 
   <div class="shuffle-row">
     <button class="btn-shuffle" id="shuffleBtn" onclick="shuffle()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg id="shuffleIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="16 3 21 3 21 8"></polyline>
         <line x1="4" y1="20" x2="21" y2="3"></line>
         <polyline points="21 16 21 21 16 21"></polyline>
@@ -279,129 +276,178 @@
   </div>
 
   <div class="results" id="results">
-    <div class="empty-state">Select sources above and hit shuffle</div>
+    <div class="state-box">Select sources above and hit shuffle</div>
   </div>
 
   <hr class="divider" />
-
   <p class="section-label" style="color: var(--border-strong);">More categories coming soon</p>
 
 </main>
 
 <script>
-  const SOURCES = [
-    {
-      id: "wsj",
-      name: "Wall Street Journal",
-      desc: "Markets, business, finance",
-      sections: [
-        { label: "Markets",     url: "https://www.wsj.com/news/markets" },
-        { label: "Economy",     url: "https://www.wsj.com/news/economy" },
-        { label: "Business",    url: "https://www.wsj.com/news/business" },
-        { label: "Tech",        url: "https://www.wsj.com/news/tech" },
-        { label: "Politics",    url: "https://www.wsj.com/news/politics" },
-        { label: "World",       url: "https://www.wsj.com/news/world" },
-        { label: "Opinion",     url: "https://www.wsj.com/news/opinion" },
-        { label: "Real Estate", url: "https://www.wsj.com/news/real-estate" },
-      ]
-    },
-    {
-      id: "bloomberg",
-      name: "Bloomberg",
-      desc: "Finance, global markets, politics",
-      sections: [
-        { label: "Markets",    url: "https://www.bloomberg.com/markets" },
-        { label: "Technology", url: "https://www.bloomberg.com/technology" },
-        { label: "Economics",  url: "https://www.bloomberg.com/economics" },
-        { label: "Politics",   url: "https://www.bloomberg.com/politics" },
-        { label: "Wealth",     url: "https://www.bloomberg.com/wealth" },
-        { label: "Green",      url: "https://www.bloomberg.com/green" },
-        { label: "Pursuits",   url: "https://www.bloomberg.com/pursuits" },
-        { label: "CityLab",    url: "https://www.bloomberg.com/citylab" },
-      ]
-    },
-    {
-      id: "economist",
-      name: "The Economist",
-      desc: "Global affairs, long-form analysis",
-      sections: [
-        { label: "Finance & Economics",  url: "https://www.economist.com/finance-and-economics" },
-        { label: "Business",             url: "https://www.economist.com/business" },
-        { label: "Leaders",              url: "https://www.economist.com/leaders" },
-        { label: "United States",        url: "https://www.economist.com/united-states" },
-        { label: "The World This Week",  url: "https://www.economist.com/the-world-this-week" },
-        { label: "Science & Technology", url: "https://www.economist.com/science-and-technology" },
-        { label: "Culture",              url: "https://www.economist.com/culture" },
-        { label: "Briefing",             url: "https://www.economist.com/briefing" },
-      ]
-    }
-  ];
+const PROXY = 'https://api.allorigins.win/get?url=';
 
-  let selected = new Set(["wsj", "bloomberg", "economist"]);
-
-  function renderSources() {
-    document.getElementById("sources").innerHTML = SOURCES.map(s => `
-      <div class="source-card ${selected.has(s.id) ? 'selected' : ''}"
-           onclick="toggle('${s.id}')"
-           role="checkbox"
-           aria-checked="${selected.has(s.id)}"
-           tabindex="0"
-           onkeydown="if(event.key==='Enter'||event.key===' ')toggle('${s.id}')">
-        <div class="check">${selected.has(s.id) ? '✓' : ''}</div>
-        <p class="name">${s.name}</p>
-        <p class="desc">${s.desc}</p>
-      </div>
-    `).join("");
+const SOURCES = [
+  {
+    id: "wsj",
+    name: "Wall Street Journal",
+    desc: "Markets, business, finance",
+    feeds: [
+      { label: "Markets",     url: "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines" },
+      { label: "Opinion",     url: "https://feeds.content.dowjones.io/public/rss/RSSOpinion" },
+      { label: "World News",  url: "https://feeds.content.dowjones.io/public/rss/RSSWorldNews" },
+      { label: "Business",    url: "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness" },
+      { label: "Tech",        url: "https://feeds.content.dowjones.io/public/rss/RSSWSJD" },
+      { label: "Lifestyle",   url: "https://feeds.content.dowjones.io/public/rss/RSSLifestyle" },
+    ]
+  },
+  {
+    id: "bloomberg",
+    name: "Bloomberg",
+    desc: "Finance, global markets, politics",
+    feeds: [
+      { label: "Markets",    url: "https://feeds.bloomberg.com/markets/news.rss" },
+      { label: "Technology", url: "https://feeds.bloomberg.com/technology/news.rss" },
+      { label: "Politics",   url: "https://feeds.bloomberg.com/politics/news.rss" },
+      { label: "Business",   url: "https://feeds.bloomberg.com/business/news.rss" },
+      { label: "Wealth",     url: "https://feeds.bloomberg.com/wealth/news.rss" },
+    ]
+  },
+  {
+    id: "economist",
+    name: "The Economist",
+    desc: "Global affairs, long-form analysis",
+    feeds: [
+      { label: "Leaders",             url: "https://www.economist.com/feeds/print-sections/69/leaders.xml" },
+      { label: "Briefing",            url: "https://www.economist.com/feeds/print-sections/102/briefings2.xml" },
+      { label: "United States",       url: "https://www.economist.com/feeds/print-sections/71/united-states.xml" },
+      { label: "Business",            url: "https://www.economist.com/feeds/print-sections/77/business.xml" },
+      { label: "Finance & Economics", url: "https://www.economist.com/feeds/print-sections/79/finance-and-economics.xml" },
+      { label: "Science & Tech",      url: "https://www.economist.com/feeds/print-sections/80/science-and-technology.xml" },
+      { label: "Books & Arts",        url: "https://www.economist.com/feeds/print-sections/89/books-and-arts.xml" },
+    ]
   }
+];
 
-  function toggle(id) {
-    selected.has(id) ? selected.delete(id) : selected.add(id);
-    renderSources();
-  }
+let selected = new Set(["wsj", "bloomberg", "economist"]);
 
-  function shuffle() {
-    const btn = document.getElementById("shuffleBtn");
-    btn.classList.add("spinning");
-    setTimeout(() => btn.classList.remove("spinning"), 400);
+function renderSources() {
+  document.getElementById("sources").innerHTML = SOURCES.map(s => `
+    <div class="source-card ${selected.has(s.id) ? 'selected' : ''}"
+         onclick="toggle('${s.id}')"
+         role="checkbox"
+         aria-checked="${selected.has(s.id)}"
+         tabindex="0"
+         onkeydown="if(event.key==='Enter'||event.key===' ')toggle('${s.id}')">
+      <div class="check">${selected.has(s.id) ? '✓' : ''}</div>
+      <p class="name">${s.name}</p>
+      <p class="desc">${s.desc}</p>
+    </div>
+  `).join("");
+}
 
-    const pool = SOURCES.filter(s => selected.has(s.id));
-    if (!pool.length) {
-      document.getElementById("results").innerHTML =
-        '<div class="empty-state">Select at least one source first.</div>';
-      return;
-    }
-
-    const picks = [];
-    const used = new Set();
-    let attempts = 0;
-    while (picks.length < 3 && attempts < 200) {
-      attempts++;
-      const src = pool[Math.floor(Math.random() * pool.length)];
-      const sec = src.sections[Math.floor(Math.random() * src.sections.length)];
-      const key = src.id + sec.label;
-      if (!used.has(key)) { used.add(key); picks.push({ src, sec }); }
-    }
-
-    document.getElementById("results").innerHTML = picks.map(({ src, sec }) => `
-      <div class="result-card">
-        <div class="result-info">
-          <p class="result-source">${src.name}</p>
-          <p class="result-section">${sec.label}</p>
-          <p class="result-url">${sec.url}</p>
-        </div>
-        <a class="btn-open" href="${sec.url}" target="_blank" rel="noopener">
-          Open
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-        </a>
-      </div>
-    `).join("");
-  }
-
+function toggle(id) {
+  selected.has(id) ? selected.delete(id) : selected.add(id);
   renderSources();
+}
+
+async function fetchFeed(feedUrl) {
+  const res = await fetch(PROXY + encodeURIComponent(feedUrl));
+  const json = await res.json();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(json.contents, "text/xml");
+  const items = Array.from(doc.querySelectorAll("item"));
+  return items.map(item => ({
+    title: item.querySelector("title")?.textContent?.trim() || "",
+    url:   item.querySelector("link")?.textContent?.trim() || "",
+    date:  item.querySelector("pubDate")?.textContent?.trim() || "",
+  })).filter(i => i.title && i.url);
+}
+
+function formatDate(str) {
+  if (!str) return "";
+  const d = new Date(str);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+async function shuffle() {
+  const pool = SOURCES.filter(s => selected.has(s.id));
+  if (!pool.length) {
+    document.getElementById("results").innerHTML =
+      '<div class="state-box">Select at least one source first.</div>';
+    return;
+  }
+
+  const btn = document.getElementById("shuffleBtn");
+  btn.disabled = true;
+  btn.classList.add("spinning");
+  document.getElementById("results").innerHTML =
+    '<div class="state-box"><span class="loading-dots">Fetching articles</span></div>';
+
+  // Pick 3 source+feed combos (unique sources where possible)
+  const picks = [];
+  const usedSources = new Set();
+  const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+
+  for (const src of shuffledPool) {
+    if (picks.length >= 3) break;
+    picks.push({ src, feed: pickRandom(src.feeds) });
+    usedSources.add(src.id);
+  }
+  // Fill up to 3 if fewer than 3 sources selected
+  while (picks.length < 3) {
+    const src = pickRandom(pool);
+    picks.push({ src, feed: pickRandom(src.feeds) });
+  }
+
+  // Fetch all feeds in parallel
+  const results = await Promise.allSettled(
+    picks.map(async ({ src, feed }) => {
+      const articles = await fetchFeed(feed.url);
+      if (!articles.length) throw new Error("No articles");
+      const article = pickRandom(articles);
+      return { src, feed, article };
+    })
+  );
+
+  btn.disabled = false;
+  setTimeout(() => btn.classList.remove("spinning"), 500);
+
+  const successes = results
+    .filter(r => r.status === "fulfilled")
+    .map(r => r.value);
+
+  if (!successes.length) {
+    document.getElementById("results").innerHTML =
+      '<div class="state-box">Couldn\'t fetch articles right now. Try again.</div>';
+    return;
+  }
+
+  document.getElementById("results").innerHTML = successes.map(({ src, article }) => `
+    <div class="result-card">
+      <div class="result-info">
+        <p class="result-source">${src.name}</p>
+        <p class="result-title">${article.title}</p>
+        ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
+      </div>
+      <a class="btn-open" href="${article.url}" target="_blank" rel="noopener">
+        Open
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      </a>
+    </div>
+  `).join("");
+}
+
+renderSources();
 </script>
 
 </body>
