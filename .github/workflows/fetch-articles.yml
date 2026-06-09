@@ -23,7 +23,7 @@ jobs:
           import os
           from datetime import datetime, timezone, timedelta
 
-          KEEP_DAYS = 21  # rolling 2-week window
+          KEEP_DAYS = 21
 
           FEEDS = [
             {"source": "Wall Street Journal", "id": "wsj", "feeds": [
@@ -40,6 +40,19 @@ jobs:
               {"label": "Politics", "url": "https://feeds.bloomberg.com/politics/news.rss"},
               {"label": "Business", "url": "https://feeds.bloomberg.com/business/news.rss"},
               {"label": "Wealth", "url": "https://feeds.bloomberg.com/wealth/news.rss"},
+            ]},
+            {"source": "Yahoo Finance", "id": "yahoo", "feeds": [
+              {"label": "Top Stories", "url": "https://finance.yahoo.com/news/rssindex"},
+              {"label": "Markets", "url": "https://finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US"},
+              {"label": "Technology", "url": "https://finance.yahoo.com/news/rssindex?category=technology"},
+            ]},
+            {"source": "CNN", "id": "cnn", "feeds": [
+              {"label": "Top Stories", "url": "http://rss.cnn.com/rss/edition.rss"},
+              {"label": "World", "url": "http://rss.cnn.com/rss/edition_world.rss"},
+              {"label": "US", "url": "http://rss.cnn.com/rss/edition_us.rss"},
+              {"label": "Business", "url": "http://rss.cnn.com/rss/money_news_international.rss"},
+              {"label": "Technology", "url": "http://rss.cnn.com/rss/edition_technology.rss"},
+              {"label": "Politics", "url": "http://rss.cnn.com/rss/edition_politics.rss"},
             ]},
           ]
 
@@ -67,7 +80,6 @@ jobs:
                 pass
             return None
 
-          # Load existing data
           existing = {}
           if os.path.exists("articles.json"):
             with open("articles.json") as f:
@@ -78,37 +90,31 @@ jobs:
 
           for source in FEEDS:
             sid = source["id"]
-            # Start with existing articles, indexed by URL
             seen = {a["url"]: a for a in existing.get(sid, {}).get("articles", [])}
-
-            # Fetch new articles and merge
             for feed in source["feeds"]:
               try:
                 new_articles = fetch_feed(feed["url"])
                 for a in new_articles:
-                  seen[a["url"]] = a  # overwrite with fresh data if duplicate
+                  seen[a["url"]] = a
                 print(f"  {sid} / {feed['label']}: {len(new_articles)} fetched")
               except Exception as e:
                 print(f"  FAILED {sid} / {feed['label']}: {e}")
 
-            # Filter to 2-week window, drop undated articles older than cutoff
             all_articles = []
             for a in seen.values():
               d = parse_date(a.get("date", ""))
               if d is None or d >= cutoff:
                 all_articles.append(a)
 
-            # Sort newest first
             all_articles.sort(key=lambda a: parse_date(a.get("date","")) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-
             output[sid] = {"name": source["source"], "articles": all_articles}
-            print(f"  {sid} total after merge: {len(all_articles)}")
+            print(f"  {sid} total: {len(all_articles)}")
 
           with open("articles.json", "w") as f:
             json.dump(output, f)
 
           total = sum(len(v["articles"]) for v in output.values())
-          print(f"Done. {total} total articles in archive.")
+          print(f"Done. {total} total articles.")
           PYEOF
 
       - name: Commit articles.json

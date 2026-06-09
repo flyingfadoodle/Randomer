@@ -13,7 +13,7 @@
       --bg: #f7f5f0; --surface: #ffffff;
       --border: rgba(0,0,0,0.1); --border-strong: rgba(0,0,0,0.2);
       --text: #1a1a18; --muted: #6b6b67;
-      --info-bg: #eef4ff; --info-border: rgba(24,95,165,0.3); --info-text: #185fa5;
+      --info-bg: #eef4ff; --info-border: rgba(24,95,165,0.3);
       --radius-md: 8px; --radius-lg: 14px;
     }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -22,14 +22,21 @@
     header span { font-size: 13px; color: var(--muted); }
     .main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
-    .sources-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .sources-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 1rem; }
     .source-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.875rem 1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; user-select: none; }
     .source-card:hover { border-color: var(--border-strong); }
     .source-card.selected { border: 1.5px solid var(--info-border); background: var(--info-bg); }
-    .source-card .check { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--info-text); }
+    .source-card .check { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #185fa5; }
     .source-card.selected .check { background: var(--info-bg); border-color: var(--info-border); }
     .source-card .name { font-size: 13px; font-weight: 500; margin-bottom: 3px; padding-right: 24px; }
     .source-card .desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* Topic filters */
+    .filters-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+    .filter-btn { padding: 5px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .filter-btn:hover { border-color: var(--border-strong); color: var(--text); }
+    .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
     .shuffle-row { margin-bottom: 2rem; }
     .btn-shuffle { width: 100%; padding: 11px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
     .btn-shuffle:hover { background: #eeece7; }
@@ -37,6 +44,7 @@
     .btn-shuffle:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-shuffle svg { transition: transform 0.5s ease; }
     .btn-shuffle.spinning svg { transform: rotate(360deg); }
+
     .results { display: flex; flex-direction: column; gap: 10px; }
     .result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; animation: fadein 0.18s ease; }
     @keyframes fadein { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -44,11 +52,14 @@
     .result-source { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 3px; }
     .result-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .result-date { font-size: 12px; color: var(--muted); }
-    .btn-open { padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background 0.15s; }
-    .btn-open:hover { background: #eeece7; }
+    .result-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-action { padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background 0.15s; }
+    .btn-action:hover { background: #eeece7; }
+    .btn-copy.copied { color: #2d7a2d; border-color: #2d7a2d; }
+
     .state-box { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 14px; border: 0.5px dashed var(--border-strong); border-radius: var(--radius-lg); }
     .divider { border: none; border-top: 0.5px solid var(--border); margin: 2.5rem 0; }
-    @media (max-width: 520px) { .sources-grid { grid-template-columns: 1fr; } header { padding: 1rem; } .main { padding: 1.5rem 1rem 3rem; } }
+    @media (max-width: 520px) { .sources-grid { grid-template-columns: 1fr; } header { padding: 1rem; } .main { padding: 1.5rem 1rem 3rem; } .result-actions { flex-direction: column; } }
   </style>
 </head>
 <body>
@@ -59,6 +70,9 @@
 <main class="main">
   <p class="section-label">News</p>
   <div class="sources-grid" id="sources"></div>
+
+  <div class="filters-row" id="filters"></div>
+
   <div class="shuffle-row">
     <button class="btn-shuffle" id="shuffleBtn" onclick="shuffle()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +83,7 @@
     </button>
   </div>
   <div class="results" id="results">
-    <div class="state-box">Select sources above and hit shuffle</div>
+    <div class="state-box">Loading articles…</div>
   </div>
   <hr class="divider" />
   <p class="section-label" style="color: var(--border-strong);">More categories coming soon</p>
@@ -78,9 +92,25 @@
 const SOURCES = [
   { id: "wsj",       name: "Wall Street Journal", desc: "Markets, business, finance" },
   { id: "bloomberg", name: "Bloomberg",            desc: "Finance, global markets, politics" },
+  { id: "yahoo",     name: "Yahoo Finance",        desc: "Markets, stocks, economy" },
+  { id: "cnn",       name: "CNN",                  desc: "World news, politics, business" },
 ];
 
-let selected = new Set(["wsj", "bloomberg"]);
+const TOPICS = ["All", "Finance", "Markets", "Technology", "Politics", "Business", "World", "Economy"];
+
+// Keywords per topic for filtering
+const TOPIC_KEYWORDS = {
+  "Finance":    ["finance", "financial", "invest", "fund", "bank", "loan", "debt", "credit", "rate", "fed", "earnings"],
+  "Markets":    ["market", "stock", "shares", "nasdaq", "s&p", "dow", "crypto", "bitcoin", "trading", "equit"],
+  "Technology": ["tech", "ai", "software", "apple", "google", "amazon", "microsoft", "chip", "startup", "cyber", "data"],
+  "Politics":   ["politic", "president", "congress", "senate", "election", "democrat", "republican", "white house", "government", "trump", "biden"],
+  "Business":   ["business", "compan", "ceo", "corporate", "merger", "acquisition", "deal", "revenue", "profit"],
+  "World":      ["world", "global", "international", "china", "europe", "russia", "middle east", "africa", "asia", "uk", "iran"],
+  "Economy":    ["econom", "inflation", "gdp", "recession", "employment", "job", "wage", "trade", "tariff", "growth"],
+};
+
+let selected = new Set(["wsj", "bloomberg", "yahoo", "cnn"]);
+let activeTopic = "All";
 let articlesData = null;
 
 function renderSources() {
@@ -95,10 +125,21 @@ function renderSources() {
   `).join("");
 }
 
+function renderFilters() {
+  document.getElementById("filters").innerHTML = TOPICS.map(t => `
+    <button class="filter-btn ${activeTopic === t ? 'active' : ''}" onclick="setTopic('${t}')">${t}</button>
+  `).join("");
+}
+
 function toggle(id) {
   selected.has(id) ? selected.delete(id) : selected.add(id);
   renderSources();
-shuffle();
+}
+
+function setTopic(t) {
+  activeTopic = t;
+  renderFilters();
+  shuffle();
 }
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -110,11 +151,29 @@ function formatDate(str) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+function matchesTopic(article) {
+  if (activeTopic === "All") return true;
+  const keywords = TOPIC_KEYWORDS[activeTopic] || [];
+  const text = (article.title + " " + (article.url || "")).toLowerCase();
+  return keywords.some(k => text.includes(k));
+}
+
 async function loadArticles() {
   if (articlesData) return articlesData;
   const res = await fetch("articles.json?t=" + Date.now());
   articlesData = await res.json();
   return articlesData;
+}
+
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.classList.add("copied");
+    btn.textContent = "Copied!";
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy`;
+    }, 1500);
+  });
 }
 
 async function shuffle() {
@@ -126,26 +185,28 @@ async function shuffle() {
   const btn = document.getElementById("shuffleBtn");
   btn.disabled = true;
   btn.classList.add("spinning");
-  document.getElementById("results").innerHTML = '<div class="state-box">Picking articles\u2026</div>';
+  document.getElementById("results").innerHTML = '<div class="state-box">Picking articles…</div>';
   try {
     const data = await loadArticles();
-    const picks = [];
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    for (const src of shuffled) {
-      if (picks.length >= 5) break;
-      const articles = data[src.id]?.articles || [];
-      if (articles.length) picks.push({ src, article: pickRandom(articles) });
+
+    // Build filtered pool
+    let allArticles = [];
+    for (const src of pool) {
+      const articles = (data[src.id]?.articles || []).filter(matchesTopic);
+      allArticles = allArticles.concat(articles.map(a => ({ src, article: a })));
     }
-    while (picks.length < 5) {
-      const src = pickRandom(pool);
-      const articles = data[src.id]?.articles || [];
-      if (articles.length) picks.push({ src, article: pickRandom(articles) });
-      else break;
-    }
-    if (!picks.length) {
-      document.getElementById("results").innerHTML = '<div class="state-box">No articles found. Try again shortly.</div>';
+
+    if (!allArticles.length) {
+      document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic === "All" ? "" : activeTopic + " "}articles found. Try a different filter or source.</div>`;
+      btn.disabled = false;
+      btn.classList.remove("spinning");
       return;
     }
+
+    // Pick 5 random unique articles
+    const shuffled = allArticles.sort(() => Math.random() - 0.5);
+    const picks = shuffled.slice(0, 5);
+
     document.getElementById("results").innerHTML = picks.map(({ src, article }) => `
       <div class="result-card">
         <div class="result-info">
@@ -153,14 +214,16 @@ async function shuffle() {
           <p class="result-title">${article.title}</p>
           ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
         </div>
-        <a class="btn-open" href="${article.url}" target="_blank" rel="noopener">
-          Open
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-        </a>
+        <div class="result-actions">
+          <button class="btn-action btn-copy" onclick="copyLink('${article.url.replace(/'/g,"\\'")}', this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy
+          </button>
+          <a class="btn-action" href="${article.url}" target="_blank" rel="noopener">
+            Open
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
       </div>
     `).join("");
   } catch (e) {
@@ -171,6 +234,7 @@ async function shuffle() {
 }
 
 renderSources();
+renderFilters();
 shuffle();
 </script>
 </body>
