@@ -112,6 +112,7 @@ const TOPIC_KEYWORDS = {
 let selected = new Set(["wsj", "bloomberg", "yahoo", "cnn"]);
 let activeTopic = "All";
 let articlesData = null;
+let currentPicks = [];
 
 function renderSources() {
   document.getElementById("sources").innerHTML = SOURCES.map(s => `
@@ -139,7 +140,7 @@ function toggle(id) {
 function setTopic(t) {
   activeTopic = t;
   renderFilters();
-  shuffle();
+  renderPicks();
 }
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -176,6 +177,34 @@ function copyLink(url, btn) {
   });
 }
 
+function renderPicks() {
+  if (!currentPicks.length) return;
+  const filtered = currentPicks.filter(({ article }) => matchesTopic(article));
+  if (!filtered.length) {
+    document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic} articles in current picks. Hit shuffle for new ones.</div>`;
+    return;
+  }
+  document.getElementById("results").innerHTML = filtered.map(({ src, article }) => `
+    <div class="result-card">
+      <div class="result-info">
+        <p class="result-source">${src.name}</p>
+        <p class="result-title">${article.title}</p>
+        ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
+      </div>
+      <div class="result-actions">
+        <button class="btn-action btn-copy" onclick="copyLink('${article.url.replace(/'/g,"\\'")}', this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy
+        </button>
+        <a class="btn-action" href="${article.url}" target="_blank" rel="noopener">
+          Open
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      </div>
+    </div>
+  `).join("");
+}
+
 async function shuffle() {
   const pool = SOURCES.filter(s => selected.has(s.id));
   if (!pool.length) {
@@ -188,44 +217,19 @@ async function shuffle() {
   document.getElementById("results").innerHTML = '<div class="state-box">Picking articles…</div>';
   try {
     const data = await loadArticles();
-
-    // Build filtered pool
     let allArticles = [];
     for (const src of pool) {
-      const articles = (data[src.id]?.articles || []).filter(matchesTopic);
+      const articles = data[src.id]?.articles || [];
       allArticles = allArticles.concat(articles.map(a => ({ src, article: a })));
     }
-
     if (!allArticles.length) {
-      document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic === "All" ? "" : activeTopic + " "}articles found. Try a different filter or source.</div>`;
+      document.getElementById("results").innerHTML = '<div class="state-box">No articles found. Try again shortly.</div>';
       btn.disabled = false;
       btn.classList.remove("spinning");
       return;
     }
-
-    // Pick 5 random unique articles
-    const shuffled = allArticles.sort(() => Math.random() - 0.5);
-    const picks = shuffled.slice(0, 5);
-
-    document.getElementById("results").innerHTML = picks.map(({ src, article }) => `
-      <div class="result-card">
-        <div class="result-info">
-          <p class="result-source">${src.name}</p>
-          <p class="result-title">${article.title}</p>
-          ${article.date ? `<p class="result-date">${formatDate(article.date)}</p>` : ""}
-        </div>
-        <div class="result-actions">
-          <button class="btn-action btn-copy" onclick="copyLink('${article.url.replace(/'/g,"\\'")}', this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy
-          </button>
-          <a class="btn-action" href="${article.url}" target="_blank" rel="noopener">
-            Open
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
-        </div>
-      </div>
-    `).join("");
+    currentPicks = allArticles.sort(() => Math.random() - 0.5).slice(0, 5);
+    renderPicks();
   } catch (e) {
     document.getElementById("results").innerHTML = '<div class="state-box">Couldn\'t load articles. Try again shortly.</div>';
   }
