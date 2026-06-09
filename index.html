@@ -219,11 +219,11 @@ async function shuffle() {
     const data = await loadArticles();
     let allArticles = [];
     for (const src of pool) {
-      const articles = data[src.id]?.articles || [];
+      const articles = (data[src.id]?.articles || []).filter(matchesTopic);
       allArticles = allArticles.concat(articles.map(a => ({ src, article: a })));
     }
     if (!allArticles.length) {
-      document.getElementById("results").innerHTML = '<div class="state-box">No articles found. Try again shortly.</div>';
+      document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic === "All" ? "" : activeTopic + " "}articles found. Try a different filter or source.</div>`;
       btn.disabled = false;
       btn.classList.remove("spinning");
       return;
