@@ -98,6 +98,7 @@ function renderSources() {
 function toggle(id) {
   selected.has(id) ? selected.delete(id) : selected.add(id);
   renderSources();
+shuffle();
 }
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -170,6 +171,7 @@ async function shuffle() {
 }
 
 renderSources();
+shuffle();
 </script>
 </body>
 </html>
