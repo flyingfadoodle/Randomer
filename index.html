@@ -217,6 +217,12 @@ async function shuffle() {
       return;
     }
     currentPicks = allArticles.sort(() => Math.random() - 0.5).slice(0, 50);
+    // Sort by date descending so order is stable across topic switches
+    currentPicks.sort((a, b) => {
+      const da = new Date(a.article.date || 0);
+      const db = new Date(b.article.date || 0);
+      return db - da;
+    });
     renderPicks();
   } catch (e) {
     document.getElementById("results").innerHTML = '<div class="state-box">Couldn\'t load articles. Try again shortly.</div>';
