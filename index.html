@@ -129,7 +129,7 @@ function toggle(id) {
 function setTopic(t) {
   activeTopic = t;
   renderFilters();
-  shuffle();
+  renderPicks();
 }
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -166,9 +166,9 @@ function copyLink(url, btn) {
 
 function renderPicks() {
   if (!currentPicks.length) return;
-  const filtered = currentPicks.filter(({ article }) => matchesTopic(article));
+  const filtered = currentPicks.filter(({ article }) => matchesTopic(article)).slice(0, 5);
   if (!filtered.length) {
-    document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic} articles in current picks. Hit shuffle for new ones.</div>`;
+    document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic} articles in this batch. Hit shuffle to get new ones.</div>`;
     return;
   }
   document.getElementById("results").innerHTML = filtered.map(({ src, article }) => `
@@ -204,18 +204,19 @@ async function shuffle() {
   document.getElementById("results").innerHTML = '<div class="state-box">Picking articles…</div>';
   try {
     const data = await loadArticles();
+    // Build full pool regardless of topic, shuffle it, keep 50
     let allArticles = [];
     for (const src of pool) {
-      const articles = (data[src.id]?.articles || []).filter(matchesTopic);
+      const articles = data[src.id]?.articles || [];
       allArticles = allArticles.concat(articles.map(a => ({ src, article: a })));
     }
     if (!allArticles.length) {
-      document.getElementById("results").innerHTML = `<div class="state-box">No ${activeTopic === "All" ? "" : activeTopic + " "}articles found. Try a different filter or source.</div>`;
+      document.getElementById("results").innerHTML = '<div class="state-box">No articles found. Try again shortly.</div>';
       btn.disabled = false;
       btn.classList.remove("spinning");
       return;
     }
-    currentPicks = allArticles.sort(() => Math.random() - 0.5).slice(0, 5);
+    currentPicks = allArticles.sort(() => Math.random() - 0.5).slice(0, 50);
     renderPicks();
   } catch (e) {
     document.getElementById("results").innerHTML = '<div class="state-box">Couldn\'t load articles. Try again shortly.</div>';
