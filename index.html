@@ -22,12 +22,15 @@
     header span { font-size: 13px; color: var(--muted); }
     .main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
-    .sources-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; cursor: pointer; user-select: none; }
+    .sources-header { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 0.75rem 1rem; cursor: pointer; user-select: none; }
     .sources-header .section-label { margin-bottom: 0; }
+    .sources-header-left { display: flex; flex-direction: column; gap: 2px; }
+    .sources-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .sources-subtitle { font-size: 11px; color: var(--muted); }
     .sources-toggle { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
     .sources-toggle svg { transition: transform 0.2s ease; }
     .sources-toggle.collapsed svg { transform: rotate(-90deg); }
-    .sources-list { display: flex; flex-direction: column; border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; transition: all 0.2s ease; }
+    .sources-list { display: flex; flex-direction: column; border: 0.5px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
     .sources-list.collapsed { display: none; }
     .source-card { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 0.65rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 12px; user-select: none; transition: background 0.15s; }
     .source-card:last-child { border-bottom: none; }
@@ -77,9 +80,11 @@
 </header>
 <main class="main">
   <div class="sources-header" onclick="toggleSources()">
-    <p class="section-label">News</p>
+    <div class="sources-header-left">
+      <span class="sources-title">News Sources</span>
+      <span class="sources-subtitle" id="sourcesSubtitle">7 sources selected</span>
+    </div>
     <span class="sources-toggle" id="sourcesToggle">
-      <span id="sourcesToggleLabel">Hide</span>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
     </span>
   </div>
@@ -123,10 +128,13 @@ let currentPicks = [];
 function toggleSources() {
   const list = document.getElementById("sources");
   const toggle = document.getElementById("sourcesToggle");
-  const label = document.getElementById("sourcesToggleLabel");
   const collapsed = list.classList.toggle("collapsed");
   toggle.classList.toggle("collapsed", collapsed);
-  label.textContent = collapsed ? "Show" : "Hide";
+}
+
+function updateSubtitle() {
+  const n = selected.size;
+  document.getElementById("sourcesSubtitle").textContent = `${n} of ${SOURCES.length} selected`;
 }
 
 function renderSources() {
@@ -151,6 +159,7 @@ function renderFilters() {
 function toggle(id) {
   selected.has(id) ? selected.delete(id) : selected.add(id);
   renderSources();
+  updateSubtitle();
 }
 
 function setTopic(t) {
@@ -259,6 +268,7 @@ async function shuffle() {
 }
 
 renderSources();
+updateSubtitle();
 renderFilters();
 shuffle();
 </script>
