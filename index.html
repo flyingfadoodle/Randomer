@@ -96,18 +96,7 @@ const SOURCES = [
   { id: "cnn",       name: "CNN",                  desc: "World news, politics, business" },
 ];
 
-const TOPICS = ["All", "Finance", "Markets", "Technology", "Politics", "Business", "World", "Economy"];
-
-// Keywords per topic for filtering
-const TOPIC_KEYWORDS = {
-  "Finance":    ["finance", "financial", "invest", "fund", "bank", "loan", "debt", "credit", "rate", "fed", "earnings"],
-  "Markets":    ["market", "stock", "shares", "nasdaq", "s&p", "dow", "crypto", "bitcoin", "trading", "equit"],
-  "Technology": ["tech", "ai", "software", "apple", "google", "amazon", "microsoft", "chip", "startup", "cyber", "data"],
-  "Politics":   ["politic", "president", "congress", "senate", "election", "democrat", "republican", "white house", "government", "trump", "biden"],
-  "Business":   ["business", "compan", "ceo", "corporate", "merger", "acquisition", "deal", "revenue", "profit"],
-  "World":      ["world", "global", "international", "china", "europe", "russia", "middle east", "africa", "asia", "uk", "iran"],
-  "Economy":    ["econom", "inflation", "gdp", "recession", "employment", "job", "wage", "trade", "tariff", "growth"],
-};
+const TOPICS = ["All", "Finance", "Markets", "Technology", "Politics", "Business", "World"];
 
 let selected = new Set(["wsj", "bloomberg", "yahoo", "cnn"]);
 let activeTopic = "All";
@@ -154,9 +143,7 @@ function formatDate(str) {
 
 function matchesTopic(article) {
   if (activeTopic === "All") return true;
-  const keywords = TOPIC_KEYWORDS[activeTopic] || [];
-  const text = (article.title + " " + (article.url || "")).toLowerCase();
-  return keywords.some(k => text.includes(k));
+  return (article.topics || []).includes(activeTopic);
 }
 
 async function loadArticles() {

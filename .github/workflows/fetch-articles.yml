@@ -25,34 +25,35 @@ jobs:
 
           KEEP_DAYS = 21
 
+          # Each feed has a "topics" list — articles from that feed get those tags
           FEEDS = [
             {"source": "Wall Street Journal", "id": "wsj", "feeds": [
-              {"label": "Business", "url": "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness"},
-              {"label": "World News", "url": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews"},
-              {"label": "Opinion", "url": "https://feeds.content.dowjones.io/public/rss/RSSOpinion"},
-              {"label": "Tech", "url": "https://feeds.content.dowjones.io/public/rss/RSSWSJD"},
-              {"label": "Markets", "url": "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines"},
-              {"label": "Lifestyle", "url": "https://feeds.content.dowjones.io/public/rss/RSSLifestyle"},
+              {"label": "Business",   "url": "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness", "topics": ["Business"]},
+              {"label": "World News", "url": "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",     "topics": ["World"]},
+              {"label": "Opinion",    "url": "https://feeds.content.dowjones.io/public/rss/RSSOpinion",       "topics": []},
+              {"label": "Tech",       "url": "https://feeds.content.dowjones.io/public/rss/RSSWSJD",          "topics": ["Technology"]},
+              {"label": "Markets",    "url": "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines", "topics": ["Markets", "Finance"]},
+              {"label": "Lifestyle",  "url": "https://feeds.content.dowjones.io/public/rss/RSSLifestyle",     "topics": []},
             ]},
             {"source": "Bloomberg", "id": "bloomberg", "feeds": [
-              {"label": "Markets", "url": "https://feeds.bloomberg.com/markets/news.rss"},
-              {"label": "Technology", "url": "https://feeds.bloomberg.com/technology/news.rss"},
-              {"label": "Politics", "url": "https://feeds.bloomberg.com/politics/news.rss"},
-              {"label": "Business", "url": "https://feeds.bloomberg.com/business/news.rss"},
-              {"label": "Wealth", "url": "https://feeds.bloomberg.com/wealth/news.rss"},
+              {"label": "Markets",    "url": "https://feeds.bloomberg.com/markets/news.rss",    "topics": ["Markets", "Finance"]},
+              {"label": "Technology", "url": "https://feeds.bloomberg.com/technology/news.rss", "topics": ["Technology"]},
+              {"label": "Politics",   "url": "https://feeds.bloomberg.com/politics/news.rss",   "topics": ["Politics"]},
+              {"label": "Business",   "url": "https://feeds.bloomberg.com/business/news.rss",   "topics": ["Business"]},
+              {"label": "Wealth",     "url": "https://feeds.bloomberg.com/wealth/news.rss",     "topics": ["Finance"]},
             ]},
             {"source": "Yahoo Finance", "id": "yahoo", "feeds": [
-              {"label": "Top Stories", "url": "https://finance.yahoo.com/news/rssindex"},
-              {"label": "Markets", "url": "https://finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US"},
-              {"label": "Technology", "url": "https://finance.yahoo.com/news/rssindex?category=technology"},
+              {"label": "Top Stories", "url": "https://finance.yahoo.com/news/rssindex",                                          "topics": ["Finance", "Markets"]},
+              {"label": "Markets",     "url": "https://finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US",          "topics": ["Markets", "Finance"]},
+              {"label": "Technology",  "url": "https://finance.yahoo.com/news/rssindex?category=technology",                      "topics": ["Technology"]},
             ]},
             {"source": "CNN", "id": "cnn", "feeds": [
-              {"label": "Top Stories", "url": "http://rss.cnn.com/rss/edition.rss"},
-              {"label": "World", "url": "http://rss.cnn.com/rss/edition_world.rss"},
-              {"label": "US", "url": "http://rss.cnn.com/rss/edition_us.rss"},
-              {"label": "Business", "url": "http://rss.cnn.com/rss/money_news_international.rss"},
-              {"label": "Technology", "url": "http://rss.cnn.com/rss/edition_technology.rss"},
-              {"label": "Politics", "url": "http://rss.cnn.com/rss/edition_politics.rss"},
+              {"label": "Top Stories", "url": "http://rss.cnn.com/rss/edition.rss",                     "topics": []},
+              {"label": "World",       "url": "http://rss.cnn.com/rss/edition_world.rss",               "topics": ["World"]},
+              {"label": "US",          "url": "http://rss.cnn.com/rss/edition_us.rss",                  "topics": []},
+              {"label": "Business",    "url": "http://rss.cnn.com/rss/money_news_international.rss",    "topics": ["Business", "Finance"]},
+              {"label": "Technology",  "url": "http://rss.cnn.com/rss/edition_technology.rss",          "topics": ["Technology"]},
+              {"label": "Politics",    "url": "http://rss.cnn.com/rss/edition_politics.rss",            "topics": ["Politics"]},
             ]},
           ]
 
@@ -90,11 +91,20 @@ jobs:
 
           for source in FEEDS:
             sid = source["id"]
+            # Preserve existing articles by URL
             seen = {a["url"]: a for a in existing.get(sid, {}).get("articles", [])}
+
             for feed in source["feeds"]:
               try:
                 new_articles = fetch_feed(feed["url"])
                 for a in new_articles:
+                  # Merge topics if article already exists
+                  if a["url"] in seen:
+                    existing_topics = set(seen[a["url"]].get("topics", []))
+                    existing_topics.update(feed["topics"])
+                    a["topics"] = list(existing_topics)
+                  else:
+                    a["topics"] = feed["topics"]
                   seen[a["url"]] = a
                 print(f"  {sid} / {feed['label']}: {len(new_articles)} fetched")
               except Exception as e:
