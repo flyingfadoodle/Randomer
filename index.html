@@ -129,7 +129,7 @@ function toggle(id) {
 function setTopic(t) {
   activeTopic = t;
   renderFilters();
-  renderPicks();
+  shuffle();
 }
 
 function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
