@@ -96,11 +96,14 @@ const SOURCES = [
   { id: "bloomberg", name: "Bloomberg",            desc: "Finance, global markets, politics" },
   { id: "yahoo",     name: "Yahoo Finance",        desc: "Markets, stocks, economy" },
   { id: "cnn",       name: "CNN",                  desc: "World news, politics, business" },
+  { id: "verge",     name: "The Verge",            desc: "Consumer tech, AI, culture" },
+  { id: "wired",     name: "Wired",                desc: "Tech, science, security" },
+  { id: "bbc",       name: "BBC News",             desc: "World news, politics, business, tech" },
 ];
 
 const TOPICS = ["All", "Finance", "Markets", "Technology", "Politics", "Business", "World"];
 
-let selected = new Set(["wsj", "bloomberg", "yahoo", "cnn"]);
+let selected = new Set(["wsj", "bloomberg", "yahoo", "cnn", "verge", "wired", "bbc"]);
 let activeTopic = "All";
 let articlesData = null;
 let currentPicks = [];

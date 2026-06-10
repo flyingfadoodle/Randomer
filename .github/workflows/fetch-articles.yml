@@ -55,6 +55,19 @@ jobs:
               {"label": "Technology",  "url": "http://rss.cnn.com/rss/edition_technology.rss",          "topics": ["Technology"]},
               {"label": "Politics",    "url": "http://rss.cnn.com/rss/edition_politics.rss",            "topics": ["Politics"]},
             ]},
+            {"source": "The Verge", "id": "verge", "feeds": [
+              {"label": "All", "url": "https://www.theverge.com/rss/index.xml", "topics": ["Technology"]},
+            ]},
+            {"source": "Wired", "id": "wired", "feeds": [
+              {"label": "All", "url": "https://www.wired.com/feed/rss", "topics": ["Technology"]},
+            ]},
+            {"source": "BBC News", "id": "bbc", "feeds": [
+              {"label": "Top Stories", "url": "https://feeds.bbci.co.uk/news/rss.xml",            "topics": []},
+              {"label": "World",       "url": "https://feeds.bbci.co.uk/news/world/rss.xml",       "topics": ["World"]},
+              {"label": "Technology",  "url": "https://feeds.bbci.co.uk/news/technology/rss.xml",  "topics": ["Technology"]},
+              {"label": "Business",    "url": "https://feeds.bbci.co.uk/news/business/rss.xml",    "topics": ["Business", "Finance"]},
+              {"label": "Politics",    "url": "https://feeds.bbci.co.uk/news/politics/rss.xml",    "topics": ["Politics"]},
+            ]},
           ]
 
           def fetch_feed(url):
